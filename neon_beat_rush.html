@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#090a18">
+<title>Neon Beat Rush</title>
+<style>
+  :root{
+    --bg:#090a18;--panel:#12142a;--cyan:#5cf5ff;--pink:#ff4fd8;--lime:#9cff57;
+    --white:#f7f8ff;--muted:#9da4c6;--red:#ff5b68;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:system-ui,Segoe UI,Arial,sans-serif;color:var(--white);touch-action:none}
+  #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  canvas{width:100%;height:100%;display:block;background:linear-gradient(#11142b,#080917)}
+  .hud{position:fixed;inset:0;pointer-events:none}
+  .topbar{display:flex;justify-content:space-between;align-items:flex-start;padding:14px max(14px,env(safe-area-inset-left)) 0;gap:10px}
+  .card{background:rgba(11,13,32,.72);border:1px solid rgba(255,255,255,.10);backdrop-filter:blur(10px);border-radius:16px;padding:9px 12px;box-shadow:0 8px 35px rgba(0,0,0,.25)}
+  .score{font-size:22px;font-weight:900;letter-spacing:.5px}
+  .small{font-size:12px;color:var(--muted);font-weight:700}
+  .meter{width:150px;height:9px;background:#252844;border-radius:99px;overflow:hidden;margin-top:5px}
+  .meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--pink),var(--cyan));border-radius:99px}
+  #beat{font-weight:900;text-align:center;min-width:95px}
+  #beatText{font-size:14px;color:var(--cyan)}
+  .help{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(104px + env(safe-area-inset-bottom));font-size:12px;color:#c6c9e6;background:rgba(8,9,22,.6);border-radius:999px;padding:7px 12px;pointer-events:none}
+  .controls{position:fixed;left:0;right:0;bottom:0;padding:10px max(10px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  button{border:0;color:white;font-size:17px;font-weight:900;border-radius:18px;height:62px;background:rgba(20,23,49,.9);border:1px solid rgba(255,255,255,.12);box-shadow:0 5px 22px rgba(0,0,0,.35);touch-action:manipulation}
+  button:active{transform:scale(.96);background:#252950}
+  .laneBtn{font-size:12px;letter-spacing:.5px}
+  #start,#gameover{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 35%,rgba(31,36,86,.85),rgba(4,5,13,.96));z-index:10}
+  .modal{width:min(92vw,430px);padding:28px;border-radius:28px;background:rgba(15,17,41,.92);border:1px solid rgba(255,255,255,.12);text-align:center;box-shadow:0 25px 80px rgba(0,0,0,.5)}
+  h1{margin:0 0 6px;font-size:40px;line-height:1;font-weight:1000;letter-spacing:-1.6px}
+  .tag{margin:0 0 18px;color:var(--cyan);font-weight:900;letter-spacing:2px;font-size:12px}
+  .desc{color:#bdc1df;line-height:1.5;font-size:14px}
+  .bigbtn{width:100%;height:60px;margin-top:18px;background:linear-gradient(90deg,#ff38d4,#27d6ff);color:#090a18;font-size:18px;border:0}
+  .key{display:inline-flex;min-width:30px;justify-content:center;padding:4px 7px;border-radius:8px;background:#272a4e;margin:0 2px;color:#fff;font-weight:900}
+  #grade{font-size:78px;font-weight:1000;line-height:.85;text-shadow:0 0 25px rgba(92,245,255,.35);margin-top:10px}
+  #finalScore{font-size:26px;font-weight:900;margin-top:8px}
+  #sub{color:#b6bbda}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="game"></canvas></div>
+
+<div class="hud" id="hud">
+  <div class="topbar">
+    <div class="card">
+      <div class="small">SCORE</div>
+      <div class="score" id="score">0</div>
+      <div class="small">COMBO ×<span id="combo">0</span></div>
+    </div>
+    <div class="card" id="beat"><div class="small">RHYTHM</div><div id="beatText">READY</div><div class="meter"><i id="boost"></i></div></div>
+    <div class="card">
+      <div class="small">HEALTH</div>
+      <div class="meter"><i id="hp"></i></div>
+      <div class="small">SPEED <span id="speed">1.0</span>x</div>
+    </div>
+  </div>
+  <div class="help">Tap ONE flashing lane on the beat • Perfect = turbo • Misses slow you down</div>
+</div>
+
+<div class="controls">
+  <button class="laneBtn" data-lane="0">◀ LEFT</button>
+  <button class="laneBtn" data-lane="1">▲ UP</button>
+  <button class="laneBtn" data-lane="2">▼ DOWN</button>
+  <button class="laneBtn" data-lane="3">RIGHT ▶</button>
+</div>
+
+<div id="start">
+  <div class="modal">
+    <div class="tag">MOBILE RHYTHM RACER</div>
+    <h1>NEON<br>BEAT RUSH</h1>
+    <p class="desc">Race through a living synthwave highway. One note appears at a time and lands on the beat. Tap the matching lane to drift, charge your turbo, and overtake the rival.</p>
+    <p class="desc"><span class="key">◀</span><span class="key">▲</span><span class="key">▼</span><span class="key">▶</span> also work on keyboard.</p>
+    <button class="bigbtn" id="startBtn">START ENGINE</button>
+  </div>
+</div>
+
+<div id="gameover" class="hidden">
+  <div class="modal">
+    <div class="tag">RUN COMPLETE</div>
+    <div id="grade">A</div>
+    <div id="finalScore">0</div>
+    <div id="sub">Your best combo is waiting.</div>
+    <button class="bigbtn" id="againBtn">RACE AGAIN</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas=document.getElementById('game'), ctx=canvas.getContext('2d');
+  const DPR=Math.min(devicePixelRatio||1,2);
+  let W=innerWidth,H=innerHeight;
+  function resize(){W=innerWidth;H=innerHeight;canvas.width=W*DPR;canvas.height=H*DPR;canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0)}
+  addEventListener('resize',resize);resize();
+
+  const lanes=4, keys=['ArrowLeft','ArrowUp','ArrowDown','ArrowRight'];
+  const state={
+    running:false,t:0,score:0,combo:0,bestCombo:0,hp:100,boost:0,speed:1,
+    playerLane:1,targetLane:1,notes:[],particles:[],stars:[],
+    bpm:112,beatDur:60/112,nextBeat:0, beatIndex:0, flash:0, roadPulse:0,
+    rival:{x:0.52,lane:2,shake:0}, lastNoteBeat:-1
+  };
+
+  for(let i=0;i<90;i++) state.stars.push({x:Math.random(),y:Math.random(),s:.3+Math.random()*1.3,a:.2+Math.random()*.8});
+
+  const laneX=(lane)=> W*.5 + (lane-1.5)*Math.min(W*.085,74);
+  const roadTop=()=>H*.26;
+  const roadBottom=()=>H*.82;
+  function spawnNote(beat){
+    // One note at a time: every rhythm prompt can be completed with a single tap.
+    // The occasional empty beat keeps the rhythm from feeling too repetitive.
+    if(Math.random()<.07)return;
+
+    const lane=Math.floor(Math.random()*4);
+    state.notes.push({
+      lane,
+      beat,
+      hit:false,
+      y:-.08,
+      hold:false
+    });
+  }
+
+  function addBurst(x,y,color,amount=12){
+    for(let i=0;i<amount;i++){
+      const a=Math.random()*Math.PI*2, v=1+Math.random()*4;
+      state.particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:1,s:2+Math.random()*4});
+    }
+  }
+
+  function pressLane(lane){
+    if(!state.running)return;
+    state.targetLane=lane;
+    // Find the nearest note to hit timing window.
+    let best=null,bestDist=999;
+    for(const n of state.notes){
+      if(n.lane!==lane || n.hit)continue;
+      const d=Math.abs(n.beat-state.t/state.beatDur);
+      if(d<bestDist){bestDist=d;best=n}
+    }
+    if(best && bestDist<.22){
+      best.hit=true;
+      let rating;
+      if(bestDist<.055){rating='PERFECT';state.score+=100+state.combo*6;state.boost=Math.min(100,state.boost+13)}
+      else if(bestDist<.12){rating='GOOD';state.score+=60+state.combo*3;state.boost=Math.min(100,state.boost+8)}
+      else {rating='OK';state.score+=25;state.boost=Math.min(100,state.boost+4)}
+      state.combo++; state.bestCombo=Math.max(state.bestCombo,state.combo);
+      state.speed=Math.min(1.65,state.speed+.025);
+      popText(rating, laneX(lane), H*.58, rating==='PERFECT'?'#5cf5ff':'#ffffff');
+      addBurst(laneX(lane),H*.61,rating==='PERFECT'?'cyan':'white',rating==='PERFECT'?22:10);
+    }else{
+      miss();
+    }
+  }
+  function miss(){
+    state.combo=0;state.hp-=10;state.speed=Math.max(.82,state.speed-.09);state.flash=.55;
+    addBurst(laneX(state.playerLane),H*.62,'red',10);
+    if(state.hp<=0) endGame();
+  }
+
+  let texts=[];
+  function popText(text,x,y,color){
+    texts.push({text,x,y,color,life:1});
+  }
+
+  function timingFor(n){
+    // map note beat to visible road location; note reaches hit line at beat.
+    const delta=n.beat-state.t/state.beatDur;
+    return .58-delta*.25;
+  }
+
+  function update(dt){
+    if(!state.running)return;
+    state.t+=dt*state.speed;
+    state.flash=Math.max(0,state.flash-dt*2);
+    state.roadPulse=Math.max(0,state.roadPulse-dt*3);
+
+    const beat=state.t/state.beatDur;
+    const next=Math.floor(beat)+1;
+    if(next>state.beatIndex){
+      state.beatIndex=next;
+      state.roadPulse=1;
+      spawnNote(next+0.0);
+    }
+
+    for(const n of state.notes){
+      n.y=timingFor(n);
+      if(!n.hit && n.beat<beat-.24){
+        n.hit=true; miss();
+      }
+    }
+    state.notes=state.notes.filter(n=>!n.hit && n.y<1.18);
+
+    state.playerLane += (state.targetLane-state.playerLane)*Math.min(1,dt*12);
+
+    // Rival drifts between lanes.
+    if(Math.random()<dt*.5) state.rival.lane=Math.floor(Math.random()*4);
+    state.rival.x += (0.54 + Math.sin(state.t*.8)*.04 - state.rival.x)*dt*.6;
+    state.rival.shake=Math.max(0,state.rival.shake-dt*2);
+
+    // Turbo burst changes score/speed.
+    if(state.boost>=100){
+      state.boost=0;state.speed=Math.min(1.65,state.speed+.18);
+      popText('TURBO!',W*.5,H*.33,'#9cff57');
+      addBurst(W*.5,H*.65,'lime',35);
+    }
+    state.boost=Math.max(0,state.boost-dt*2.2);
+
+    for(const p of state.particles){p.x+=p.vx;p.y+=p.vy;p.vy+=.08;p.life-=dt*1.8}
+    state.particles=state.particles.filter(p=>p.life>0);
+    for(const tx of texts){tx.y-=dt*25;tx.life-=dt*1.5}
+    texts=texts.filter(t=>t.life>0);
+
+    // Music-like pulse and score trickle.
+    state.score+=dt*2*state.speed;
+    document.getElementById('score').textContent=Math.floor(state.score).toLocaleString();
+    document.getElementById('combo').textContent=state.combo;
+    document.getElementById('boost').style.width=state.boost+'%';
+    document.getElementById('hp').style.width=Math.max(0,state.hp)+'%';
+    document.getElementById('speed').textContent=state.speed.toFixed(1);
+
+    if(state.t>75) endGame();
+  }
+
+  function roadPath(offset){
+    const top=roadTop(), bottom=roadBottom();
+    const cx=W*.5;
+    ctx.beginPath();
+    ctx.moveTo(cx-W*.06,top);
+    ctx.lineTo(cx+W*.06,top);
+    ctx.lineTo(cx+W*.42,bottom);
+    ctx.lineTo(cx-W*.42,bottom);
+    ctx.closePath();
+    const grad=ctx.createLinearGradient(0,top,0,bottom);
+    grad.addColorStop(0,'rgba(28,34,75,.88)');
+    grad.addColorStop(1,'rgba(10,12,27,.97)');
+    ctx.fillStyle=grad;ctx.fill();
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    // Sky
+    const sky=ctx.createLinearGradient(0,0,0,H);
+    sky.addColorStop(0,'#121630');sky.addColorStop(.55,'#0a0b1a');sky.addColorStop(1,'#06070f');
+    ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+
+    // stars
+    for(const s of state.stars){
+      const yy=(s.y+state.t*.002*s.s)%1;
+      ctx.globalAlpha=s.a;
+      ctx.fillStyle='#aab2ff';ctx.fillRect(s.x*W,yy*H,s.s,s.s);
+    }
+    ctx.globalAlpha=1;
+
+    // glowing skyline
+    for(let i=0;i<20;i++){
+      const bw=30+(i*17)%55, bh=20+(i*29)%110, x=(i/20)*W;
+      ctx.fillStyle=i%2?'#121633':'#171a3d';
+      ctx.fillRect(x,H*.48-bh,bw,bh);
+      for(let w=0;w<3;w++){ctx.fillStyle=i%3===0?'#ff4fd8':'#5cf5ff';ctx.globalAlpha=.18;ctx.fillRect(x+7+w*10,H*.48-bh+12,4,3)}
+    }
+    ctx.globalAlpha=1;
+
+    roadPath();
+    // Beat grid / lane rails
+    const top=roadTop(), bot=roadBottom(), cx=W*.5;
+    for(let lane=0;lane<=4;lane++){
+      const p0=lane/4, xTop=cx-W*.06+W*.12*p0, xBot=cx-W*.42+W*.84*p0;
+      ctx.strokeStyle=lane===0||lane===4?'rgba(255,79,216,.26)':'rgba(92,245,255,.12)';
+      ctx.lineWidth=lane===0||lane===4?2:1;
+      ctx.beginPath();ctx.moveTo(xTop,top);ctx.lineTo(xBot,bot);ctx.stroke();
+    }
+    for(let k=0;k<12;k++){
+      let z=(k/12 + (state.t*.09)%1); z%=1;
+      const y=top + (bot-top)*z*z;
+      const width=W*.12 + W*.72*z*z;
+      ctx.strokeStyle=`rgba(92,245,255,${.08+.18*state.roadPulse})`;
+      ctx.beginPath();ctx.moveTo(cx-width/2,y);ctx.lineTo(cx+width/2,y);ctx.stroke();
+    }
+
+    // Notes
+    for(const n of state.notes){
+      if(n.hit)continue;
+      const y=top+(bot-top)*Math.max(0,Math.min(1,n.y));
+      const z=Math.max(0,n.y), x=laneX(n.lane);
+      const size=14+34*z;
+      ctx.save();ctx.translate(x,y);
+      ctx.shadowBlur=18;ctx.shadowColor='#5cf5ff';ctx.fillStyle='#5cf5ff';
+      ctx.beginPath();ctx.roundRect(-size/2,-size/2,size,size*.65,8);ctx.fill();
+      ctx.shadowBlur=0;ctx.fillStyle='#07101e';ctx.font=`900 ${Math.max(10,size*.28)}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(['◀','▲','▼','▶'][n.lane],0,0);
+      ctx.restore();
+    }
+
+    // Hit line
+    ctx.strokeStyle=`rgba(255,255,255,${.25+.45*state.roadPulse})`;ctx.lineWidth=4;
+    ctx.beginPath();ctx.moveTo(W*.18,H*.61);ctx.lineTo(W*.82,H*.61);ctx.stroke();
+
+    // Player
+    drawCar(laneX(Math.round(state.playerLane)),H*.69,38,68,'#5cf5ff',false);
+
+    // Particles
+    for(const p of state.particles){
+      ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.life>.5?'#5cf5ff':'#ff4fd8';ctx.fillRect(p.x,p.y,p.s,p.s);
+    }
+    ctx.globalAlpha=1;
+
+    // Text feedback
+    for(const tx of texts){
+      ctx.globalAlpha=tx.life;ctx.fillStyle=tx.color;ctx.font='1000 22px system-ui';ctx.textAlign='center';ctx.shadowBlur=15;ctx.shadowColor=tx.color;ctx.fillText(tx.text,tx.x,tx.y);ctx.shadowBlur=0;
+    }
+    ctx.globalAlpha=1;
+    if(state.flash>0){ctx.fillStyle=`rgba(255,70,90,${state.flash*.16})`;ctx.fillRect(0,0,W,H)}
+  }
+
+  function drawCar(x,y,w,h,color,rival){
+    ctx.save();ctx.translate(x,y);
+    ctx.shadowBlur=22;ctx.shadowColor=color;
+    ctx.fillStyle='rgba(0,0,0,.45)';ctx.beginPath();ctx.ellipse(0,h*.36,w*.75,9,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(-w/2,-h/2,w,h,12);ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.fillStyle='#101226';ctx.beginPath();ctx.roundRect(-w*.32,-h*.18,w*.64,h*.34,8);ctx.fill();
+    ctx.fillStyle='#fff';ctx.globalAlpha=.8;ctx.fillRect(-w*.33,-h*.40,w*.18,5);ctx.fillRect(w*.15,-h*.40,w*.18,5);ctx.globalAlpha=1;
+    ctx.fillStyle='#080912';ctx.fillRect(-w*.53,-h*.27,7,h*.18);ctx.fillRect(w*.45,-h*.27,7,h*.18);
+    if(!rival){ctx.fillStyle='#eaffff';ctx.fillRect(-w*.2,h*.23,w*.4,4)}
+    ctx.restore();
+  }
+
+  let last=performance.now();
+  function loop(now){
+    const dt=Math.min(.033,(now-last)/1000);last=now;
+    update(dt);draw();requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  function start(){
+    state.running=true;state.t=0;state.score=0;state.combo=0;state.bestCombo=0;state.hp=100;state.boost=0;state.speed=1;state.notes=[];state.particles=[];texts=[];state.beatIndex=0;
+    document.getElementById('start').classList.add('hidden');document.getElementById('gameover').classList.add('hidden');
+  }
+  function endGame(){
+    if(!state.running)return;
+    state.running=false;
+    const grade=state.hp>70&&state.bestCombo>20?'S':state.hp>50&&state.bestCombo>12?'A':state.hp>30&&state.bestCombo>7?'B':'C';
+    document.getElementById('grade').textContent=grade;
+    document.getElementById('finalScore').textContent=Math.floor(state.score).toLocaleString();
+    document.getElementById('sub').textContent=`Best combo ×${state.bestCombo} • Speed ${state.speed.toFixed(1)}x`;
+    document.getElementById('gameover').classList.remove('hidden');
+  }
+  document.getElementById('startBtn').onclick=start;
+  document.getElementById('againBtn').onclick=start;
+  document.querySelectorAll('.laneBtn').forEach(b=>{
+    b.addEventListener('pointerdown',e=>{e.preventDefault();pressLane(+b.dataset.lane)});
+  });
+  addEventListener('keydown',e=>{
+    const i=keys.indexOf(e.key); if(i>=0){e.preventDefault();pressLane(i)}
+    if(e.key===' ' && !state.running) start();
+  });
+})();
+</script>
+</body>
+</html>
