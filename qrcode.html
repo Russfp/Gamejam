@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #f4f7fe;
+            --card-bg: #ffffff;
+            --accent-color: #4318ff;
+            --text-color: #2b3674;
+            --border-color: #e0e5f2;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 450px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            text-align: center;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #a3edd9;
+            color: #707ebe;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus, select:focus {
+            border-color: var(--accent-color);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .color-picker {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .color-picker input[type="color"] {
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 5px;
+            cursor: pointer;
+            background: none;
+        }
+
+        #qrcode-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: #fafafa;
+            border-radius: 12px;
+            border: 1px dashed var(--border-color);
+            min-height: 220px;
+        }
+
+        .btn-download {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .btn-download:hover {
+            background-color: #3311cc;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>QR Code Generator</h1>
+
+    <div class="input-group">
+        <label for="text-input">Text or URL</label>
+        <input type="text" id="text-input" placeholder="https://example.com" value="https://example.com">
+    </div>
+
+    <div class="options-grid">
+        <div class="input-group">
+            <label for="color-dark">QR Color</label>
+            <div class="color-picker">
+                <input type="color" id="color-dark" value="#000000">
+                <span id="dark-hex">#000000</span>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="color-light">Background</label>
+            <div class="color-picker">
+                <input type="color" id="color-light" value="#ffffff">
+                <span id="light-hex">#ffffff</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="options-grid">
+        <div class="input-group">
+            <label for="size">Size (px)</label>
+            <select id="size">
+                <option value="128">128 x 128</option>
+                <option value="200" selected>200 x 200</option>
+                <option value="300">300 x 300</option>
+                <option value="400">400 x 400</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label for="correction">Error Correction</label>
+            <select id="correction">
+                <option value="L">Low (7%)</option>
+                <option value="M" selected>Medium (15%)</option>
+                <option value="Q">Quartile (25%)</option>
+                <option value="H">High (30%)</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="qrcode-wrapper">
+        <div id="qrcode"></div>
+    </div>
+
+    <button class="btn-download" onclick="downloadQRCode()">Download PNG</button>
+</div>
+
+<script>
+    const textInput = document.getElementById('text-input');
+    const colorDark = document.getElementById('color-dark');
+    const colorLight = document.getElementById('color-light');
+    const darkHex = document.getElementById('dark-hex');
+    const lightHex = document.getElementById('light-hex');
+    const sizeSelect = document.getElementById('size');
+    const correctionSelect = document.getElementById('correction');
+    const qrcodeContainer = document.getElementById('qrcode');
+
+    let qrcode = null;
+
+    function getCorrectionLevel(level) {
+        switch (level) {
+            case 'L': return QRCode.CorrectLevel.L;
+            case 'M': return QRCode.CorrectLevel.M;
+            case 'Q': return QRCode.CorrectLevel.Q;
+            case 'H': return QRCode.CorrectLevel.H;
+            default: return QRCode.CorrectLevel.M;
+        }
+    }
+
+    function generateQRCode() {
+        const text = textInput.value.trim();
+        qrcodeContainer.innerHTML = ''; // Clear previous QR Code
+
+        if (!text) return;
+
+        const size = parseInt(sizeSelect.value);
+
+        qrcode = new QRCode(qrcodeContainer, {
+            text: text,
+            width: size,
+            height: size,
+            colorDark: colorDark.value,
+            colorLight: colorLight.value,
+            correctLevel: getCorrectionLevel(correctionSelect.value)
+        });
+    }
+
+    // Event Listeners for Live Updates
+    textInput.addEventListener('input', generateQRCode);
+    sizeSelect.addEventListener('change', generateQRCode);
+    correctionSelect.addEventListener('change', generateQRCode);
+
+    colorDark.addEventListener('input', (e) => {
+        darkHex.textContent = e.target.value;
+        generateQRCode();
+    });
+
+    colorLight.addEventListener('input', (e) => {
+        lightHex.textContent = e.target.value;
+        generateQRCode();
+    });
+
+    // Download Handler
+    function downloadQRCode() {
+        const img = qrcodeContainer.querySelector('img');
+        const canvas = qrcodeContainer.querySelector('canvas');
+
+        let imageSrc = '';
+        if (img && img.src) {
+            imageSrc = img.src;
+        } else if (canvas) {
+            imageSrc = canvas.toDataURL('image/png');
+        }
+
+        if (!imageSrc) {
+            alert('Please enter text or a URL first.');
+            return;
+        }
+
+        const link = document.createElement('a');
+        link.href = imageSrc;
+        link.download = 'qrcode.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // Initial render
+    generateQRCode();
+</script>
+
+</body>
+</html>
