@@ -1,439 +1,534 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Monster Munchies: Bistro Bites</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
-            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Ghoulish Gourmet</title>
+  <style>
+    :root {
+      --bg-color: #120e1e;
+      --panel-bg: #1f1833;
+      --accent-green: #50fa7b;
+      --accent-purple: #bd93f9;
+      --accent-red: #ff5555;
+      --accent-yellow: #f1fa8c;
+      --text-light: #f8f8f2;
+    }
 
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #1a0933;
-            color: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow: hidden;
-        }
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
 
-        #game-container {
-            width: 100vw;
-            max-width: 420px;
-            height: 100vh;
-            max-height: 750px;
-            background: linear-gradient(180deg, #2d124d 0%, #150727 100%);
-            border: 4px solid #6b2da8;
-            border-radius: 16px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            box-shadow: 0 0 20px rgba(107, 45, 168, 0.5);
-        }
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-color);
+      color: var(--text-light);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
 
-        /* Header UI */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.4);
-            border-bottom: 2px solid #6b2da8;
-        }
+    #game-container {
+      width: 100%;
+      max-width: 420px;
+      height: 100vh;
+      max-height: 750px;
+      background-color: var(--panel-bg);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      border: 2px solid var(--accent-purple);
+    }
 
-        .stat-box {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #4eff91;
-            text-shadow: 0 0 5px #4eff91;
-        }
+    /* Header & Customer Area */
+    #customer-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, #281e45 0%, var(--panel-bg) 100%);
+      padding: 15px;
+      position: relative;
+    }
 
-        /* Customer Station */
-        #customer-station {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            padding: 10px;
-        }
+    #customer-avatar {
+      font-size: 80px;
+      filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
 
-        #customer-avatar {
-            font-size: 5rem;
-            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
+    .bounce {
+      transform: scale(1.1);
+    }
 
-        #speech-bubble {
-            background: #fff;
-            color: #000;
-            padding: 10px 15px;
-            border-radius: 15px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            position: relative;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            text-align: center;
-        }
+    #order-bubble {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background-color: var(--text-light);
+      color: #000;
+      padding: 10px 15px;
+      border-radius: 18px;
+      font-weight: bold;
+      font-size: 14px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
 
-        #speech-bubble::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            border-width: 10px 10px 0;
-            border-style: solid;
-            border-color: #fff transparent;
-        }
+    #order-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 20px;
+      border-width: 8px 8px 0;
+      border-style: solid;
+      border-color: var(--text-light) transparent;
+      display: block;
+      width: 0;
+    }
 
-        .patience-bar-container {
-            width: 80%;
-            height: 12px;
-            background: #333;
-            border-radius: 6px;
-            overflow: hidden;
-            margin-top: 10px;
-            border: 1px solid #555;
-        }
+    #patience-bar-container {
+      width: 80%;
+      height: 10px;
+      background-color: #44475a;
+      border-radius: 5px;
+      margin-top: 15px;
+      overflow: hidden;
+    }
 
-        #patience-bar {
-            width: 100%;
-            height: 100%;
-            background: #ff4757;
-            transition: width 0.1s linear;
-        }
+    #patience-bar {
+      width: 100%;
+      height: 100%;
+      background-color: var(--accent-green);
+      transition: width 0.1s linear, background-color 0.3s;
+    }
 
-        /* Kitchen Work Area */
-        #kitchen-station {
-            height: 320px;
-            background: #250e3e;
-            border-top: 4px solid #6b2da8;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-around;
-            padding: 15px;
-        }
+    /* Gameplay Area */
+    #work-area {
+      flex: 1.5;
+      background-color: #151026;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+    }
 
-        .instructions {
-            font-size: 0.9rem;
-            color: #d1ccc0;
-            text-align: center;
-        }
+    .stage-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--accent-yellow);
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
 
-        /* Mini Game 1: Chop */
-        #chop-game {
-            width: 100%;
-            height: 200px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
+    /* Minigame 1: Chopping */
+    #chop-game {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
 
-        #cutting-board {
-            width: 180px;
-            height: 120px;
-            background: #8b5a2b;
-            border: 4px solid #5c3a17;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3.5rem;
-            cursor: pointer;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
-        }
+    #eyeball-target {
+      width: 100px;
+      height: 100px;
+      background-color: #ff5555;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 50px;
+      cursor: pointer;
+      box-shadow: 0 0 15px rgba(255, 85, 85, 0.4);
+      transition: transform 0.05s;
+    }
 
-        /* Mini Game 2: Dragon Fire Sear */
-        #sear-game {
-            width: 100%;
-            height: 200px;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
+    #eyeball-target:active {
+      transform: scale(0.9);
+    }
 
-        .meter-container {
-            width: 200px;
-            height: 30px;
-            background: #333;
-            border-radius: 15px;
-            position: relative;
-            overflow: hidden;
-            border: 2px solid #fff;
-            margin-bottom: 20px;
-        }
+    /* Minigame 2: Stirring */
+    #stir-game {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
 
-        .target-zone {
-            position: absolute;
-            left: 60%;
-            width: 25%;
-            height: 100%;
-            background: rgba(78, 255, 145, 0.6);
-        }
+    #cauldron {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #8be9fd 0%, #44475a 70%);
+      border: 8px solid #6272a4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      touch-action: none;
+    }
 
-        #sear-gauge {
-            width: 0%;
-            height: 100%;
-            background: linear-gradient(90deg, #fffa65, #ff4757);
-        }
+    #spoon {
+      font-size: 40px;
+      position: absolute;
+      pointer-events: none;
+    }
 
-        .game-btn {
-            background: #ff5252;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            border-radius: 25px;
-            box-shadow: 0 5px 0 #b33939;
-            cursor: pointer;
-            touch-action: manipulation;
-        }
+    /* Minigame 3: Temperature Control */
+    #heat-game {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
 
-        .game-btn:active {
-            transform: translateY(3px);
-            box-shadow: 0 2px 0 #b33939;
-        }
+    #meter-container {
+      width: 40px;
+      height: 150px;
+      background-color: #44475a;
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      border: 2px solid #6272a4;
+    }
 
-        /* Overlay Screens */
-        .overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(15, 5, 29, 0.95);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-            padding: 20px;
-            text-align: center;
-        }
+    #sweet-spot {
+      position: absolute;
+      width: 100%;
+      height: 40px;
+      top: 40px;
+      background-color: rgba(80, 250, 123, 0.4);
+      border-top: 2px solid var(--accent-green);
+      border-bottom: 2px solid var(--accent-green);
+    }
 
-        .overlay h1 { color: #ff5252; margin-bottom: 10px; font-size: 2rem; }
-        .overlay p { color: #ccc; margin-bottom: 20px; }
-    </style>
+    #heat-indicator {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 10px;
+      background-color: var(--accent-red);
+      transition: height 0.05s ease-out;
+    }
+
+    .game-btn {
+      background-color: var(--accent-purple);
+      color: #fff;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 25px;
+      margin-top: 15px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+
+    .game-btn:active {
+      transform: translateY(2px);
+    }
+
+    /* UI Overlay */
+    #score-board {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-weight: bold;
+      color: var(--accent-green);
+      font-size: 16px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    #screen-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(18, 14, 30, 0.95);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      padding: 20px;
+      text-align: center;
+    }
+
+    #screen-overlay h1 {
+      color: var(--accent-green);
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
 
 <div id="game-container">
-    <header>
-        <div class="stat-box" id="score-display">Coins: 0</div>
-        <div class="stat-box" id="level-display">Customer: 1</div>
-    </header>
+  <div id="score-board">Gold: <span id="score">0</span></div>
 
-    <div id="customer-station">
-        <div id="speech-bubble">I want Krazy Tentacles! Chop 'em up!</div>
-        <div id="customer-avatar">🦑</div>
-        <div class="patience-bar-container">
-            <div id="patience-bar"></div>
-        </div>
+  <div id="customer-area">
+    <div id="order-bubble">Wants: <span id="recipe-name">Eyeball Soup</span></div>
+    <div id="customer-avatar">👹</div>
+    <div id="patience-bar-container">
+      <div id="patience-bar"></div>
+    </div>
+  </div>
+
+  <div id="work-area">
+    <div id="chop-game" class="minigame">
+      <div class="stage-title">Tap Fast to Slice Eyeballs!</div>
+      <div id="eyeball-target">👁️</div>
+      <p>Slices needed: <span id="chop-count">5</span></p>
     </div>
 
-    <div id="kitchen-station">
-        <div id="chop-game">
-            <div class="instructions" id="chop-instructions">Tap the Tentacle 5 times quickly!</div>
-            <div id="cutting-board">🦑</div>
-        </div>
-
-        <div id="sear-game">
-            <div class="instructions">Hold Sear and release in the GREEN zone!</div>
-            <div class="meter-container">
-                <div class="target-zone"></div>
-                <div id="sear-gauge"></div>
-            </div>
-            <button class="game-btn" id="sear-btn">HOLD TO SEAR 🐉</button>
-        </div>
+    <div id="stir-game" class="minigame hidden">
+      <div class="stage-title">Swirl Finger to Stir Gloop!</div>
+      <div id="cauldron">
+        <div id="spoon">🥄</div>
+      </div>
+      <p>Progress: <span id="stir-progress">0</span>%</p>
     </div>
 
-    <div id="overlay" class="overlay">
-        <h1 id="overlay-title">Monster Munchies</h1>
-        <p id="overlay-desc">Feed the monsters before their patience runs out!</p>
-        <button class="game-btn" id="start-btn" onclick="startGame()">PLAY GAME</button>
+    <div id="heat-game" class="minigame hidden">
+      <div class="stage-title">Hold Button to Match Heat!</div>
+      <div id="meter-container">
+        <div id="sweet-spot"></div>
+        <div id="heat-indicator"></div>
+      </div>
+      <button class="game-btn" id="heat-btn">HEAT UP</button>
     </div>
+  </div>
+
+  <div id="screen-overlay">
+    <h1 id="overlay-title">Ghoulish Gourmet</h1>
+    <p id="overlay-msg">Feed the hungry monsters before they lose patience!</p>
+    <button class="game-btn" id="start-btn">PLAY</button>
+  </div>
 </div>
 
 <script>
-    // --- Audio System (Web Audio API) ---
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  // Game State Variables
+  let gold = 0;
+  let currentStage = 0; // 0: Chop, 1: Stir, 2: Heat
+  let patience = 100;
+  let patienceTimer = null;
+  let gameActive = false;
+
+  const monsters = ['👹', '👽', '👾', '👺', '👻', '🧛'];
+  const recipes = ['Eyeball Soup', 'Slime Stew', 'Gloom Broth'];
+
+  // Minigame State
+  let chopsLeft = 5;
+  let stirAngle = 0;
+  let lastAngle = null;
+  let stirProgress = 0;
+  let heatLevel = 0;
+  let heatInterval = null;
+  let heatSuccessTimer = 0;
+
+  // DOM Elements
+  const scoreEl = document.getElementById('score');
+  const customerAvatar = document.getElementById('customer-avatar');
+  const recipeNameEl = document.getElementById('recipe-name');
+  const patienceBar = document.getElementById('patience-bar');
+  const overlay = document.getElementById('screen-overlay');
+  const overlayTitle = document.getElementById('overlay-title');
+  const overlayMsg = document.getElementById('overlay-msg');
+  const startBtn = document.getElementById('start-btn');
+
+  const chopGame = document.getElementById('chop-game');
+  const stirGame = document.getElementById('stir-game');
+  const heatGame = document.getElementById('heat-game');
+
+  const eyeballTarget = document.getElementById('eyeball-target');
+  const chopCountEl = document.getElementById('chop-count');
+  const cauldron = document.getElementById('cauldron');
+  const stirProgressEl = document.getElementById('stir-progress');
+  const heatBtn = document.getElementById('heat-btn');
+  const heatIndicator = document.getElementById('heat-indicator');
+
+  // Start / Restart Game
+  startBtn.addEventListener('click', () => {
+    gold = 0;
+    scoreEl.textContent = gold;
+    overlay.classList.add('hidden');
+    gameActive = true;
+    nextCustomer();
+  });
+
+  function nextCustomer() {
+    if (!gameActive) return;
     
-    function playSound(freq, type, duration) {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + duration);
+    // Reset Customer
+    customerAvatar.textContent = monsters[Math.floor(Math.random() * monsters.length)];
+    recipeNameEl.textContent = recipes[Math.floor(Math.random() * recipes.length)];
+    customerAvatar.classList.add('bounce');
+    setTimeout(() => customerAvatar.classList.remove('bounce'), 300);
+
+    // Reset Patience
+    patience = 100;
+    clearInterval(patienceTimer);
+    patienceTimer = setInterval(() => {
+      patience -= 1.5;
+      patienceBar.style.width = patience + '%';
+      
+      if (patience < 30) {
+        patienceBar.style.backgroundColor = 'var(--accent-red)';
+      } else {
+        patienceBar.style.backgroundColor = 'var(--accent-green)';
+      }
+
+      if (patience <= 0) {
+        gameOver();
+      }
+    }, 200);
+
+    // Start Stage 1
+    startStage(0);
+  }
+
+  function startStage(stageNum) {
+    currentStage = stageNum;
+    chopGame.classList.add('hidden');
+    stirGame.classList.add('hidden');
+    heatGame.classList.add('hidden');
+
+    if (stageNum === 0) {
+      chopGame.classList.remove('hidden');
+      chopsLeft = 5;
+      chopCountEl.textContent = chopsLeft;
+    } else if (stageNum === 1) {
+      stirGame.classList.remove('hidden');
+      stirProgress = 0;
+      lastAngle = null;
+      stirProgressEl.textContent = '0';
+    } else if (stageNum === 2) {
+      heatGame.classList.remove('hidden');
+      heatLevel = 0;
+      heatSuccessTimer = 0;
+      runHeatLoop();
     }
+  }
 
-    // --- Game State ---
-    let score = 0;
-    let customerIndex = 0;
-    let currentStep = 0;
-    let chopClicksNeeded = 5;
-    let currentChops = 0;
-    let patienceTimer = null;
-    let maxPatience = 100;
-    let currentPatience = 100;
-    let searInterval = null;
-    let searValue = 0;
-
-    const monsters = [
-        { name: "Kraken Jr.", avatar: "🐙", order: "Chop the Tentacle!", ingredient: "🐙", type: "chop" },
-        { name: "Baby Dragon", avatar: "🐲", order: "Roast the Meat Steak!", ingredient: "🥩", type: "sear" },
-        { name: "Cyclops", avatar: "👁️", order: "Chop the Giant Eyeball!", ingredient: "👁️", type: "chop" },
-        { name: "Demon Lord", avatar: "👿", order: "Sear the Lava Chili!", ingredient: "🌶️", type: "sear" }
-    ];
-
-    let currentMonster = monsters[0];
-
-    // --- Core Game Loops ---
-    function startGame() {
-        score = 0;
-        customerIndex = 0;
-        document.getElementById('score-display').innerText = `Coins: ${score}`;
-        document.getElementById('overlay').style.display = 'none';
-        nextCustomer();
-    }
-
-    function gameOver() {
-        clearInterval(patienceTimer);
-        clearInterval(searInterval);
-        playSound(150, 'sawtooth', 0.5);
-        document.getElementById('overlay-title').innerText = "Game Over!";
-        document.getElementById('overlay-desc').innerText = `You ran out of patience! Total Coins: ${score}`;
-        document.getElementById('start-btn').innerText = "TRY AGAIN";
-        document.getElementById('overlay').style.display = 'flex';
-    }
-
-    function nextCustomer() {
-        currentMonster = monsters[customerIndex % monsters.length];
-        customerIndex++;
-        document.getElementById('level-display').innerText = `Customer: ${customerIndex}`;
-        document.getElementById('customer-avatar').innerText = currentMonster.avatar;
-        document.getElementById('speech-bubble').innerText = currentMonster.order;
-        
-        // Reset Patience
-        currentPatience = 100;
-        clearInterval(patienceTimer);
-        patienceTimer = setInterval(() => {
-            currentPatience -= 1.5 + (customerIndex * 0.2); // Speed increases with rounds
-            document.getElementById('patience-bar').style.width = `${currentPatience}%`;
-            if (currentPatience <= 0) gameOver();
-        }, 100);
-
-        // Load correct mini-game
-        if (currentMonster.type === 'chop') {
-            setupChopGame();
-        } else {
-            setupSearGame();
-        }
-    }
-
-    // --- Chopping Mini-Game Logic ---
-    function setupChopGame() {
-        document.getElementById('chop-game').style.display = 'flex';
-        document.getElementById('sear-game').style.display = 'none';
-        
-        currentChops = 0;
-        chopClicksNeeded = 4 + Math.min(customerIndex, 6);
-        
-        const board = document.getElementById('cutting-board');
-        board.innerText = currentMonster.ingredient;
-        document.getElementById('chop-instructions').innerText = `Tap to chop ${chopClicksNeeded} times!`;
-    }
-
-    document.getElementById('cutting-board').addEventListener('click', () => {
-        currentChops++;
-        playSound(300 + (currentChops * 50), 'square', 0.1);
-        
-        // Animate board chop
-        const board = document.getElementById('cutting-board');
-        board.style.transform = 'scale(0.9) rotate(-5deg)';
-        setTimeout(() => board.style.transform = 'scale(1) rotate(0deg)', 50);
-
-        if (currentChops >= chopClicksNeeded) {
-            completeDish();
-        }
-    });
-
-    // --- Searing Mini-Game Logic ---
-    function setupSearGame() {
-        document.getElementById('chop-game').style.display = 'none';
-        document.getElementById('sear-game').style.display = 'flex';
-        searValue = 0;
-        document.getElementById('sear-gauge').style.width = '0%';
-    }
-
-    const searBtn = document.getElementById('sear-btn');
+  function completeRecipe() {
+    clearInterval(patienceTimer);
+    clearInterval(heatInterval);
+    gold += Math.floor(patience);
+    scoreEl.textContent = gold;
     
-    function startSear(e) {
-        e.preventDefault();
-        searInterval = setInterval(() => {
-            searValue += 3;
-            if (searValue > 100) searValue = 0; // Loop gauge
-            document.getElementById('sear-gauge').style.width = `${searValue}%`;
-            playSound(100 + (searValue * 2), 'sawtooth', 0.05);
-        }, 30);
-    }
+    // Brief celebration delay
+    setTimeout(() => {
+      nextCustomer();
+    }, 500);
+  }
 
-    function stopSear(e) {
-        e.preventDefault();
-        clearInterval(searInterval);
-        
-        // Target green zone is 60% to 85%
-        if (searValue >= 60 && searValue <= 85) {
-            completeDish();
-        } else {
-            // Failed timing penalty
-            playSound(100, 'sine', 0.3);
-            currentPatience -= 20;
-            searValue = 0;
-            document.getElementById('sear-gauge').style.width = '0%';
+  function gameOver() {
+    gameActive = false;
+    clearInterval(patienceTimer);
+    clearInterval(heatInterval);
+    overlayTitle.textContent = "Customer Left!";
+    overlayMsg.textContent = `You earned ${gold} Monster Gold.`;
+    startBtn.textContent = "TRY AGAIN";
+    overlay.classList.remove('hidden');
+  }
+
+  // --- MINIGAME 1: CHOPPING ---
+  eyeballTarget.addEventListener('pointerdown', () => {
+    if (currentStage !== 0) return;
+    chopsLeft--;
+    chopCountEl.textContent = chopsLeft;
+    eyeballTarget.style.transform = 'scale(0.8)';
+    setTimeout(() => eyeballTarget.style.transform = 'scale(1)', 50);
+
+    if (chopsLeft <= 0) {
+      startStage(1);
+    }
+  });
+
+  // --- MINIGAME 2: STIRRING ---
+  function handleStir(e) {
+    if (currentStage !== 1) return;
+    const rect = cauldron.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    // Get client touch/mouse position
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+    const rad = Math.atan2(clientY - centerY, clientX - centerX);
+    const deg = rad * (180 / Math.PI);
+
+    if (lastAngle !== null) {
+      let delta = Math.abs(deg - lastAngle);
+      if (delta < 180) { // Avoid wrap-around jump anomalies
+        stirProgress += delta / 10;
+        if (stirProgress > 100) stirProgress = 100;
+        stirProgressEl.textContent = Math.floor(stirProgress);
+      }
+    }
+    lastAngle = deg;
+
+    if (stirProgress >= 100) {
+      startStage(2);
+    }
+  }
+
+  cauldron.addEventListener('pointermove', handleStir);
+  cauldron.addEventListener('touchmove', handleStir);
+
+  // --- MINIGAME 3: HEAT CONTROL ---
+  let isHeating = false;
+
+  const setHeating = (val) => { isHeating = val; };
+  heatBtn.addEventListener('mousedown', () => setHeating(true));
+  heatBtn.addEventListener('mouseup', () => setHeating(false));
+  heatBtn.addEventListener('touchstart', (e) => { e.preventDefault(); setHeating(true); });
+  heatBtn.addEventListener('touchend', (e) => { e.preventDefault(); setHeating(false); });
+
+  function runHeatLoop() {
+    clearInterval(heatInterval);
+    heatInterval = setInterval(() => {
+      if (currentStage !== 2) return;
+
+      if (isHeating) {
+        heatLevel += 3;
+      } else {
+        heatLevel -= 2;
+      }
+
+      // Clamp Heat Level
+      if (heatLevel < 0) heatLevel = 0;
+      if (heatLevel > 100) heatLevel = 100;
+
+      heatIndicator.style.height = heatLevel + '%';
+
+      // Check if heat is within the target window (40% to 66% area)
+      if (heatLevel >= 40 && heatLevel <= 66) {
+        heatSuccessTimer += 5;
+        if (heatSuccessTimer >= 100) {
+          completeRecipe();
         }
-    }
-
-    searBtn.addEventListener('mousedown', startSear);
-    searBtn.addEventListener('mouseup', stopSear);
-    searBtn.addEventListener('touchstart', startSear);
-    searBtn.addEventListener('touchend', stopSear);
-
-    // --- Serve Dish & Rewards ---
-    function completeDish() {
-        clearInterval(patienceTimer);
-        playSound(600, 'sine', 0.2);
-        setTimeout(() => playSound(800, 'sine', 0.3), 100);
-
-        // Score added based on remaining patience
-        const earned = Math.floor(currentPatience);
-        score += earned;
-        document.getElementById('score-display').innerText = `Coins: ${score}`;
-
-        // Bounce customer animation
-        const avatar = document.getElementById('customer-avatar');
-        avatar.style.transform = 'scale(1.3)';
-        setTimeout(() => avatar.style.transform = 'scale(1)', 300);
-
-        setTimeout(nextCustomer, 800);
-    }
+      } else {
+        heatSuccessTimer = Math.max(0, heatSuccessTimer - 2);
+      }
+    }, 50);
+  }
 </script>
 </body>
 </html>
