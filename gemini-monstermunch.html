@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Monster Munchies: Bistro Bites</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a0933;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #game-container {
+            width: 100vw;
+            max-width: 420px;
+            height: 100vh;
+            max-height: 750px;
+            background: linear-gradient(180deg, #2d124d 0%, #150727 100%);
+            border: 4px solid #6b2da8;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 20px rgba(107, 45, 168, 0.5);
+        }
+
+        /* Header UI */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.4);
+            border-bottom: 2px solid #6b2da8;
+        }
+
+        .stat-box {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #4eff91;
+            text-shadow: 0 0 5px #4eff91;
+        }
+
+        /* Customer Station */
+        #customer-station {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 10px;
+        }
+
+        #customer-avatar {
+            font-size: 5rem;
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #speech-bubble {
+            background: #fff;
+            color: #000;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            position: relative;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        #speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: #fff transparent;
+        }
+
+        .patience-bar-container {
+            width: 80%;
+            height: 12px;
+            background: #333;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 10px;
+            border: 1px solid #555;
+        }
+
+        #patience-bar {
+            width: 100%;
+            height: 100%;
+            background: #ff4757;
+            transition: width 0.1s linear;
+        }
+
+        /* Kitchen Work Area */
+        #kitchen-station {
+            height: 320px;
+            background: #250e3e;
+            border-top: 4px solid #6b2da8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            padding: 15px;
+        }
+
+        .instructions {
+            font-size: 0.9rem;
+            color: #d1ccc0;
+            text-align: center;
+        }
+
+        /* Mini Game 1: Chop */
+        #chop-game {
+            width: 100%;
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        #cutting-board {
+            width: 180px;
+            height: 120px;
+            background: #8b5a2b;
+            border: 4px solid #5c3a17;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            cursor: pointer;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        /* Mini Game 2: Dragon Fire Sear */
+        #sear-game {
+            width: 100%;
+            height: 200px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .meter-container {
+            width: 200px;
+            height: 30px;
+            background: #333;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #fff;
+            margin-bottom: 20px;
+        }
+
+        .target-zone {
+            position: absolute;
+            left: 60%;
+            width: 25%;
+            height: 100%;
+            background: rgba(78, 255, 145, 0.6);
+        }
+
+        #sear-gauge {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #fffa65, #ff4757);
+        }
+
+        .game-btn {
+            background: #ff5252;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 25px;
+            box-shadow: 0 5px 0 #b33939;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+
+        .game-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #b33939;
+        }
+
+        /* Overlay Screens */
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 5, 29, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .overlay h1 { color: #ff5252; margin-bottom: 10px; font-size: 2rem; }
+        .overlay p { color: #ccc; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <header>
+        <div class="stat-box" id="score-display">Coins: 0</div>
+        <div class="stat-box" id="level-display">Customer: 1</div>
+    </header>
+
+    <div id="customer-station">
+        <div id="speech-bubble">I want Krazy Tentacles! Chop 'em up!</div>
+        <div id="customer-avatar">🦑</div>
+        <div class="patience-bar-container">
+            <div id="patience-bar"></div>
+        </div>
+    </div>
+
+    <div id="kitchen-station">
+        <div id="chop-game">
+            <div class="instructions" id="chop-instructions">Tap the Tentacle 5 times quickly!</div>
+            <div id="cutting-board">🦑</div>
+        </div>
+
+        <div id="sear-game">
+            <div class="instructions">Hold Sear and release in the GREEN zone!</div>
+            <div class="meter-container">
+                <div class="target-zone"></div>
+                <div id="sear-gauge"></div>
+            </div>
+            <button class="game-btn" id="sear-btn">HOLD TO SEAR 🐉</button>
+        </div>
+    </div>
+
+    <div id="overlay" class="overlay">
+        <h1 id="overlay-title">Monster Munchies</h1>
+        <p id="overlay-desc">Feed the monsters before their patience runs out!</p>
+        <button class="game-btn" id="start-btn" onclick="startGame()">PLAY GAME</button>
+    </div>
+</div>
+
+<script>
+    // --- Audio System (Web Audio API) ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playSound(freq, type, duration) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    // --- Game State ---
+    let score = 0;
+    let customerIndex = 0;
+    let currentStep = 0;
+    let chopClicksNeeded = 5;
+    let currentChops = 0;
+    let patienceTimer = null;
+    let maxPatience = 100;
+    let currentPatience = 100;
+    let searInterval = null;
+    let searValue = 0;
+
+    const monsters = [
+        { name: "Kraken Jr.", avatar: "🐙", order: "Chop the Tentacle!", ingredient: "🐙", type: "chop" },
+        { name: "Baby Dragon", avatar: "🐲", order: "Roast the Meat Steak!", ingredient: "🥩", type: "sear" },
+        { name: "Cyclops", avatar: "👁️", order: "Chop the Giant Eyeball!", ingredient: "👁️", type: "chop" },
+        { name: "Demon Lord", avatar: "👿", order: "Sear the Lava Chili!", ingredient: "🌶️", type: "sear" }
+    ];
+
+    let currentMonster = monsters[0];
+
+    // --- Core Game Loops ---
+    function startGame() {
+        score = 0;
+        customerIndex = 0;
+        document.getElementById('score-display').innerText = `Coins: ${score}`;
+        document.getElementById('overlay').style.display = 'none';
+        nextCustomer();
+    }
+
+    function gameOver() {
+        clearInterval(patienceTimer);
+        clearInterval(searInterval);
+        playSound(150, 'sawtooth', 0.5);
+        document.getElementById('overlay-title').innerText = "Game Over!";
+        document.getElementById('overlay-desc').innerText = `You ran out of patience! Total Coins: ${score}`;
+        document.getElementById('start-btn').innerText = "TRY AGAIN";
+        document.getElementById('overlay').style.display = 'flex';
+    }
+
+    function nextCustomer() {
+        currentMonster = monsters[customerIndex % monsters.length];
+        customerIndex++;
+        document.getElementById('level-display').innerText = `Customer: ${customerIndex}`;
+        document.getElementById('customer-avatar').innerText = currentMonster.avatar;
+        document.getElementById('speech-bubble').innerText = currentMonster.order;
+        
+        // Reset Patience
+        currentPatience = 100;
+        clearInterval(patienceTimer);
+        patienceTimer = setInterval(() => {
+            currentPatience -= 1.5 + (customerIndex * 0.2); // Speed increases with rounds
+            document.getElementById('patience-bar').style.width = `${currentPatience}%`;
+            if (currentPatience <= 0) gameOver();
+        }, 100);
+
+        // Load correct mini-game
+        if (currentMonster.type === 'chop') {
+            setupChopGame();
+        } else {
+            setupSearGame();
+        }
+    }
+
+    // --- Chopping Mini-Game Logic ---
+    function setupChopGame() {
+        document.getElementById('chop-game').style.display = 'flex';
+        document.getElementById('sear-game').style.display = 'none';
+        
+        currentChops = 0;
+        chopClicksNeeded = 4 + Math.min(customerIndex, 6);
+        
+        const board = document.getElementById('cutting-board');
+        board.innerText = currentMonster.ingredient;
+        document.getElementById('chop-instructions').innerText = `Tap to chop ${chopClicksNeeded} times!`;
+    }
+
+    document.getElementById('cutting-board').addEventListener('click', () => {
+        currentChops++;
+        playSound(300 + (currentChops * 50), 'square', 0.1);
+        
+        // Animate board chop
+        const board = document.getElementById('cutting-board');
+        board.style.transform = 'scale(0.9) rotate(-5deg)';
+        setTimeout(() => board.style.transform = 'scale(1) rotate(0deg)', 50);
+
+        if (currentChops >= chopClicksNeeded) {
+            completeDish();
+        }
+    });
+
+    // --- Searing Mini-Game Logic ---
+    function setupSearGame() {
+        document.getElementById('chop-game').style.display = 'none';
+        document.getElementById('sear-game').style.display = 'flex';
+        searValue = 0;
+        document.getElementById('sear-gauge').style.width = '0%';
+    }
+
+    const searBtn = document.getElementById('sear-btn');
+    
+    function startSear(e) {
+        e.preventDefault();
+        searInterval = setInterval(() => {
+            searValue += 3;
+            if (searValue > 100) searValue = 0; // Loop gauge
+            document.getElementById('sear-gauge').style.width = `${searValue}%`;
+            playSound(100 + (searValue * 2), 'sawtooth', 0.05);
+        }, 30);
+    }
+
+    function stopSear(e) {
+        e.preventDefault();
+        clearInterval(searInterval);
+        
+        // Target green zone is 60% to 85%
+        if (searValue >= 60 && searValue <= 85) {
+            completeDish();
+        } else {
+            // Failed timing penalty
+            playSound(100, 'sine', 0.3);
+            currentPatience -= 20;
+            searValue = 0;
+            document.getElementById('sear-gauge').style.width = '0%';
+        }
+    }
+
+    searBtn.addEventListener('mousedown', startSear);
+    searBtn.addEventListener('mouseup', stopSear);
+    searBtn.addEventListener('touchstart', startSear);
+    searBtn.addEventListener('touchend', stopSear);
+
+    // --- Serve Dish & Rewards ---
+    function completeDish() {
+        clearInterval(patienceTimer);
+        playSound(600, 'sine', 0.2);
+        setTimeout(() => playSound(800, 'sine', 0.3), 100);
+
+        // Score added based on remaining patience
+        const earned = Math.floor(currentPatience);
+        score += earned;
+        document.getElementById('score-display').innerText = `Coins: ${score}`;
+
+        // Bounce customer animation
+        const avatar = document.getElementById('customer-avatar');
+        avatar.style.transform = 'scale(1.3)';
+        setTimeout(() => avatar.style.transform = 'scale(1)', 300);
+
+        setTimeout(nextCustomer, 800);
+    }
+</script>
+</body>
+</html>
